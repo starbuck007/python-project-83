@@ -8,4 +8,4 @@ echo ">>> Загружаем окружение"
 export PATH="$HOME/.local/bin:$PATH"
 
 echo ">>> Устанавливаем зависимости"
-uv sync || echo "Ошибка при установке зависимостей"
+uv pip install flask gunicorn || echo "Ошибка при установке зависимостей"
