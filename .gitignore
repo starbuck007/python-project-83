@@ -13,4 +13,4 @@ dist/
 *.egg-info/
 *.log
 .DS_Store
-.python-version
+.python-version.env
