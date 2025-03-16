@@ -1,13 +1,16 @@
+"""Database module for app."""
 import psycopg
 from psycopg.rows import dict_row
 from page_analyzer.config import DATABASE_URL
 
 
 def get_db_connection():
+    """Create and return a database connection."""
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 
 def get_urls():
+    """Get all URLs with information about their last check."""
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute('''
@@ -30,16 +33,18 @@ def get_urls():
     return urls
 
 
-def get_url_by_id(id):
+def get_url_by_id(url_id):
+    """Get URL by ID."""
     conn = get_db_connection()
     with conn.cursor() as cur:
-        cur.execute('SELECT * FROM urls WHERE id = %s', (id,))
+        cur.execute('SELECT * FROM urls WHERE id = %s', (url_id,))
         url = cur.fetchone()
     conn.close()
     return url
 
 
 def get_url_by_name(name):
+    """Get URL by URL-address."""
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute('SELECT * FROM urls WHERE name = %s', (name,))
@@ -49,17 +54,20 @@ def get_url_by_name(name):
 
 
 def add_url(url):
+    """Add new URL to the database."""
     conn = get_db_connection()
     with conn.cursor() as cur:
-        cur.execute('INSERT INTO urls (name, created_at) VALUES (%s, NOW()) RETURNING id',
+        cur.execute('INSERT INTO urls (name, created_at) '
+                    'VALUES (%s, NOW()) RETURNING id',
                    (url,))
-        id = cur.fetchone()['id']
+        url_id = cur.fetchone()['id']
     conn.commit()
     conn.close()
-    return id
+    return url_id
 
 
 def add_check(url_id, status_code, h1, title, description):
+    """Add new URL check to the database."""
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
@@ -68,13 +76,14 @@ def add_check(url_id, status_code, h1, title, description):
             'VALUES (%s, %s, %s, %s, %s, NOW()) RETURNING id',
             (url_id, status_code, h1, title, description)
         )
-        id = cur.fetchone()['id']
+        check_id = cur.fetchone()['id']
     conn.commit()
     conn.close()
-    return id
+    return check_id
 
 
 def get_checks_for_url(url_id):
+    """Get all checks for URL."""
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
