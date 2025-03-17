@@ -1,7 +1,7 @@
 """Main app logic"""
 import validators
 import requests
-import psycopg
+import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, flash, \
     abort
 from bs4 import BeautifulSoup
@@ -36,7 +36,7 @@ def index():
             flash("Страница успешно добавлена", "success")
             return redirect(url_for("url_show", url_id=url_id))
 
-        except (psycopg.Error, ValueError):
+        except (psycopg2.Error, ValueError):
             flash("Произошла ошибка при добавлении страницы", "danger")
             return render_template("index.html", url=url)
 

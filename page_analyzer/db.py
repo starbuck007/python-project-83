@@ -1,12 +1,13 @@
 """Database module for app."""
-import psycopg
-from psycopg.rows import dict_row
+import psycopg2
+import psycopg2.extras
 from page_analyzer.config import DATABASE_URL
 
 
 def get_db_connection():
     """Create and return a database connection."""
-    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
+    return psycopg2.connect(DATABASE_URL,
+                            cursor_factory=psycopg2.extras.DictCursor)
 
 
 def get_urls():
@@ -48,7 +49,7 @@ def get_url_by_id(url_id):
             ''', (url_id,))
         url = cur.fetchone()
     conn.close()
-    return url
+    return url if url is None else dict(url)
 
 
 def get_url_by_name(name):
@@ -58,7 +59,7 @@ def get_url_by_name(name):
         cur.execute('''SELECT * FROM urls WHERE name = %s''', (name,))
         url = cur.fetchone()
     conn.close()
-    return url
+    return url if url is None else dict(url)
 
 
 def add_url(url):
@@ -69,7 +70,7 @@ def add_url(url):
             INSERT INTO urls (name, created_at) 
             VALUES (%s, NOW()) RETURNING id
             ''', (url,))
-        url_id = cur.fetchone()['id']
+        url_id = cur.fetchone()[0]
     conn.commit()
     conn.close()
     return url_id
@@ -84,7 +85,7 @@ def add_check(url_id, status_code, h1, title, description):
                 (url_id, status_code, h1, title, description, created_at) 
                 VALUES (%s, %s, %s, %s, %s, NOW()) RETURNING id
                 ''', (url_id, status_code, h1, title, description))
-        check_id = cur.fetchone()['id']
+        check_id = cur.fetchone()[0]
     conn.commit()
     conn.close()
     return check_id
@@ -108,4 +109,4 @@ def get_checks_for_url(url_id):
             ''', (url_id,))
         checks = cur.fetchall()
     conn.close()
-    return checks
+    return [dict(check) for check in checks]
