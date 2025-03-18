@@ -1,11 +1,11 @@
 """Main app logic"""
+from urllib.parse import urlparse
 import validators
 import requests
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, flash, \
     abort, get_flashed_messages
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 from page_analyzer.db import get_urls, get_url_by_id, \
     get_url_by_name, add_url, add_check, get_checks_for_url
 from page_analyzer.config import SECRET_KEY
@@ -48,11 +48,13 @@ def index():
 
 @app.route('/urls')
 def urls_index():
-    """Display all URLs."""
-    if ('Некорректный URL' in [msg[1] for msg
-                               in get_flashed_messages(with_categories=True)
-                               if msg[0] == 'danger']):
-        return render_template("index.html")
+    """Display all URLs or form with incorrect link"""
+    has_url_error = any('Некорректный URL' in msg[1] for msg
+                        in get_flashed_messages(with_categories=True)
+                        if msg[0] == 'danger')
+    if has_url_error:
+        return render_template("index.html"), 422
+
     urls = get_urls()
     return render_template("urls.html", urls=urls)
 
