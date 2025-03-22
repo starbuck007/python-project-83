@@ -18,7 +18,7 @@ echo ">>> Загружаем окружение"
 export PATH="$HOME/.local/bin:$PATH"
 
 echo ">>> Устанавливаем зависимости"
-uv pip install flask gunicorn psycopg2-binary validators python-dotenv requests beautifulsoup4 || echo "Ошибка при установке зависимостей"
+uv sync || echo "Ошибка при установке зависимостей"
 
 echo ">>> Создаем таблицы в базе данных"
 psql "$DATABASE_URL" -f database.sql || echo "Ошибка при создании таблиц"
