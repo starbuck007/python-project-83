@@ -15,35 +15,44 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 
-@app.route('/', methods=["GET", "POST"])
+@app.route('/', methods=["GET"])
 def index():
-    """Processing requests on the main page."""
-    if request.method == "POST":
-        url = request.form["url"]
-        if not validators.url(url):
-            flash("Некорректный URL", "danger")
-            return redirect(url_for("urls_index"))
-        if len(url) > 255:
-            flash("URL превышает 255 символов", "danger")
-            return render_template("index.html", url=url)
-
-        normalized_url = normalize_url(url)
-
-        existing_url = get_url_by_name(normalized_url)
-        if existing_url:
-            flash("Страница уже существует", "info")
-            return redirect(url_for("url_show", url_id=existing_url['id']))
-
-        try:
-            url_id = add_url(normalized_url)
-            flash("Страница успешно добавлена", "success")
-            return redirect(url_for("url_show", url_id=url_id))
-
-        except (psycopg2.Error, ValueError):
-            flash("Произошла ошибка при добавлении страницы", "danger")
-            return render_template("index.html", url=url)
-
+    """Show the Main page"""
     return render_template("index.html")
+
+
+@app.route('/', methods=["POST"])
+def process_url():
+    """Process URL"""
+    url = request.form["url"]
+
+    if not validators.url(url):
+        flash("Некорректный URL", "danger")
+        return redirect(url_for("urls_index"))
+
+    if len(url) > 255:
+        flash("URL превышает 255 символов", "danger")
+        return render_template("index.html", url=url)
+
+    normalized_url = normalize_url(url)
+    return add_or_find_url(normalized_url)
+
+
+def add_or_find_url(url):
+    """Add new URL or return existing URL"""
+    existing_url = get_url_by_name(url)
+    if existing_url:
+        flash("Страница уже существует", "info")
+        return redirect(url_for("url_show", url_id=existing_url['id']))
+
+    try:
+        url_id = add_url(url)
+        flash("Страница успешно добавлена", "success")
+        return redirect(url_for("url_show", url_id=url_id))
+
+    except (psycopg2.Error, ValueError):
+        flash("Произошла ошибка при добавлении страницы", "danger")
+        return render_template("index.html", url=url)
 
 
 @app.route('/urls')
