@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 import validators
 import requests
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for,flash, \
+from flask import Flask, render_template, request, redirect, url_for, flash, \
                    abort, get_flashed_messages
 from bs4 import BeautifulSoup
 from page_analyzer.db import get_urls, get_url_by_id, \
