@@ -3,7 +3,8 @@ from urllib.parse import urlparse
 import validators
 import requests
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for,flash, abort
+from flask import Flask, render_template, request, redirect, url_for,flash, \
+                   abort, get_flashed_messages
 from bs4 import BeautifulSoup
 from page_analyzer.db import get_urls, get_url_by_id, \
     get_url_by_name, add_url, add_check, get_checks_for_url
@@ -16,49 +17,54 @@ app.secret_key = SECRET_KEY
 
 @app.route('/', methods=["GET"])
 def index():
-    """Show the Main page"""
-    return render_template("index.html")
+    """Show the Main page  with form"""
+    messages = get_flashed_messages(with_categories=True)
+    return render_template("index.html", messages=messages)
 
 
-@app.route('/', methods=["POST"])
+@app.route('/urls', methods=["POST"])
 def process_url():
-    """Process URL"""
+    """Process and add URL"""
     url = request.form["url"]
 
     if not validators.url(url):
         flash("Некорректный URL", "danger")
-        return render_template("index.html", url=url), 422
+        messages = get_flashed_messages(with_categories=True)
+        return render_template("index.html",
+                               url=url, messages=messages), 422
 
     if len(url) > 255:
         flash("URL превышает 255 символов", "danger")
-        return render_template("index.html", url=url)
+        messages = get_flashed_messages(with_categories=True)
+        return render_template("index.html",
+                               url=url, messages=messages), 422
 
     normalized_url = normalize_url(url)
-    return add_or_find_url(normalized_url)
 
-
-def add_or_find_url(url):
-    """Add new URL or return existing URL"""
-    existing_url = get_url_by_name(url)
+    existing_url = get_url_by_name(normalized_url)
     if existing_url:
         flash("Страница уже существует", "info")
         return redirect(url_for("url_show", url_id=existing_url['id']))
 
     try:
-        url_id = add_url(url)
+        url_id = add_url(normalized_url)
         flash("Страница успешно добавлена", "success")
         return redirect(url_for("url_show", url_id=url_id))
 
     except (psycopg2.Error, ValueError):
         flash("Произошла ошибка при добавлении страницы", "danger")
-        return render_template("index.html", url=url)
+        messages = get_flashed_messages(with_categories=True)
+        return render_template("index.html",
+                               url=url, messages=messages), 422
 
 
 @app.route('/urls')
 def urls_index():
     """Display all URLs"""
+    messages = get_flashed_messages(with_categories=True)
     urls = get_urls()
-    return render_template("urls.html", urls=urls)
+    return render_template("urls.html",
+                           urls=urls, messages=messages)
 
 
 @app.route('/urls/<int:url_id>')
@@ -68,7 +74,9 @@ def url_show(url_id):
     if not url:
         abort(404)
     checks = get_checks_for_url(url_id)
-    return render_template("url.html", url=url, checks=checks)
+    messages = get_flashed_messages(with_categories=True)
+    return render_template("url.html",
+                           url=url, checks=checks, messages=messages)
 
 
 @app.route('/urls/<int:url_id>/checks', methods=['POST'])
@@ -93,17 +101,14 @@ def url_check(url_id):
         title = title_tag.text.strip() if title_tag else ''
 
         description_tag = soup.find('meta', attrs={'name': 'description'})
-        description = description_tag[
-            'content'] if (description_tag and
+        description = description_tag['content'] if (description_tag and
                            'content' in description_tag.attrs) else ''
 
         add_check(url_id, status_code, h1, title, description)
 
-        flash('Страница успешно проверена',
-              'success')
+        flash('Страница успешно проверена','success')
     except requests.RequestException:
-        flash('Произошла ошибка при проверке страницы',
-              'danger')
+        flash('Произошла ошибка при проверке страницы','danger')
 
     return redirect(url_for('url_show', url_id=url_id))
 
