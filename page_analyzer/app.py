@@ -106,9 +106,9 @@ def url_check(url_id):
 
         add_check(url_id, status_code, h1, title, description)
 
-        flash('Страница успешно проверена','success')
+        flash('Страница успешно проверена', 'success')
     except requests.RequestException:
-        flash('Произошла ошибка при проверке страницы','danger')
+        flash('Произошла ошибка при проверке страницы', 'danger')
 
     return redirect(url_for('url_show', url_id=url_id))
 
