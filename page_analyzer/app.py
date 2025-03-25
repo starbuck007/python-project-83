@@ -5,9 +5,9 @@ import requests
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, flash, \
                    abort, get_flashed_messages
-from bs4 import BeautifulSoup
 from page_analyzer.db import get_urls, get_url_by_id, \
     get_url_by_name, add_url, add_check, get_checks_for_url
+from page_analyzer.page_parser import parse_page
 from page_analyzer.config import SECRET_KEY
 
 
@@ -89,22 +89,13 @@ def url_check(url_id):
     try:
         response = requests.get(url['name'], timeout=5)
         response.raise_for_status()
-
         status_code = response.status_code
+        page_data = parse_page(response.text)
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        h1_tag = soup.find('h1')
-        h1 = h1_tag.text.strip() if h1_tag else ''
-
-        title_tag = soup.find('title')
-        title = title_tag.text.strip() if title_tag else ''
-
-        description_tag = soup.find('meta', attrs={'name': 'description'})
-        description = description_tag['content'] if (description_tag and
-                           'content' in description_tag.attrs) else ''
-
-        add_check(url_id, status_code, h1, title, description)
+        add_check(url_id, status_code,
+                  page_data['h1'],
+                  page_data['title'],
+                  page_data['description'])
 
         flash('Страница успешно проверена', 'success')
     except requests.RequestException:
