@@ -1,7 +1,8 @@
 """Main app logic"""
 import requests
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, \
+    abort
 from page_analyzer.db import get_urls, get_url_by_id, \
     get_url_by_name, add_url, add_check, get_checks_for_url
 from page_analyzer.page_parser import parse_page
