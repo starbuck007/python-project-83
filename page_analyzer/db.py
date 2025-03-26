@@ -47,7 +47,7 @@ def get_url_by_id(url_id):
                 FROM urls WHERE id = %s
                 ''', (url_id,))
             url = cur.fetchone()
-    return url if url is None else dict(url)
+    return url
 
 
 def get_url_by_name(name):
@@ -56,7 +56,7 @@ def get_url_by_name(name):
         with conn.cursor() as cur:
             cur.execute('''SELECT * FROM urls WHERE name = %s''', (name,))
             url = cur.fetchone()
-    return url if url is None else dict(url)
+    return url
 
 
 def add_url(url):
@@ -103,4 +103,4 @@ def get_checks_for_url(url_id):
                 ORDER BY created_at DESC
                 ''', (url_id,))
             checks = cur.fetchall()
-    return [dict(check) for check in checks]
+    return checks
