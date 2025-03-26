@@ -3,8 +3,7 @@ from urllib.parse import urlparse
 import validators
 import requests
 import psycopg2
-from flask import Flask, render_template, request, redirect, url_for, flash, \
-                   abort, get_flashed_messages
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from page_analyzer.db import get_urls, get_url_by_id, \
     get_url_by_name, add_url, add_check, get_checks_for_url
 from page_analyzer.page_parser import parse_page
@@ -18,8 +17,7 @@ app.secret_key = SECRET_KEY
 @app.route('/', methods=["GET"])
 def index():
     """Show the Main page  with form"""
-    messages = get_flashed_messages(with_categories=True)
-    return render_template("index.html", messages=messages)
+    return render_template("index.html")
 
 
 @app.route('/urls', methods=["POST"])
@@ -29,15 +27,11 @@ def process_url():
 
     if not validators.url(url):
         flash("Некорректный URL", "danger")
-        messages = get_flashed_messages(with_categories=True)
-        return render_template("index.html",
-                               url=url, messages=messages), 422
+        return render_template("index.html", url=url), 422
 
     if len(url) > 255:
         flash("URL превышает 255 символов", "danger")
-        messages = get_flashed_messages(with_categories=True)
-        return render_template("index.html",
-                               url=url, messages=messages), 422
+        return render_template("index.html", url=url), 422
 
     normalized_url = normalize_url(url)
 
@@ -53,18 +47,14 @@ def process_url():
 
     except (psycopg2.Error, ValueError):
         flash("Произошла ошибка при добавлении страницы", "danger")
-        messages = get_flashed_messages(with_categories=True)
-        return render_template("index.html",
-                               url=url, messages=messages), 422
+        return render_template("index.html", url=url), 422
 
 
 @app.route('/urls')
 def urls_index():
     """Display all URLs"""
-    messages = get_flashed_messages(with_categories=True)
     urls = get_urls()
-    return render_template("urls.html",
-                           urls=urls, messages=messages)
+    return render_template("urls.html", urls=urls)
 
 
 @app.route('/urls/<int:url_id>')
@@ -74,9 +64,7 @@ def url_show(url_id):
     if not url:
         abort(404)
     checks = get_checks_for_url(url_id)
-    messages = get_flashed_messages(with_categories=True)
-    return render_template("url.html",
-                           url=url, checks=checks, messages=messages)
+    return render_template("url.html", url=url, checks=checks)
 
 
 @app.route('/urls/<int:url_id>/checks', methods=['POST'])
