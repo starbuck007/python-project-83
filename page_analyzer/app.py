@@ -1,12 +1,11 @@
 """Main app logic"""
-from urllib.parse import urlparse
-import validators
 import requests
 import psycopg2
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from page_analyzer.db import get_urls, get_url_by_id, \
     get_url_by_name, add_url, add_check, get_checks_for_url
 from page_analyzer.page_parser import parse_page
+from page_analyzer.url import validate_url, normalize_url
 from page_analyzer.config import SECRET_KEY
 
 
@@ -25,12 +24,9 @@ def process_url():
     """Process and add URL"""
     url = request.form["url"]
 
-    if not validators.url(url):
-        flash("Некорректный URL", "danger")
-        return render_template("index.html", url=url), 422
-
-    if len(url) > 255:
-        flash("URL превышает 255 символов", "danger")
+    is_valid_url, error_message = validate_url(url)
+    if not is_valid_url:
+        flash(error_message, "danger")
         return render_template("index.html", url=url), 422
 
     normalized_url = normalize_url(url)
@@ -90,12 +86,6 @@ def url_check(url_id):
         flash('Произошла ошибка при проверке страницы', 'danger')
 
     return redirect(url_for('url_show', url_id=url_id))
-
-
-def normalize_url(url):
-    """Get hostname from URL"""
-    parsed_url = urlparse(url)
-    return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
 
 if __name__ == '__main__':
