@@ -9,8 +9,8 @@
 <body>
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">Анализатор страниц</a>
-            <a class="nav-link text-white" href="/urls">Сайты</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">Анализатор страниц</a>
+            <a class="nav-link text-white" href="{{ url_for('urls_index') }}">Сайты</a>
         </div>
     </nav>
     <div class="container mt-4">
