@@ -7,7 +7,7 @@ from page_analyzer.db import get_urls, get_url_by_id, \
     get_url_by_name, add_url, add_check, get_checks_for_url
 from page_analyzer.page_parser import parse_page
 from page_analyzer.url import validate_url, normalize_url
-from page_analyzer.config import SECRET_KEY
+from page_analyzer.config import SECRET_KEY, DEBUG
 
 
 app = Flask(__name__)
@@ -90,4 +90,4 @@ def url_check(url_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=DEBUG)
